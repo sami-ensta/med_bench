@@ -481,7 +481,7 @@ def get_estimation(x, t, m, y, estimator, config):
                 interaction=False,
                 forest=False,
                 crossfit=0,
-                clip=0.0,
+                trim=0.0,
                 regularization=False,
                 calibration=False,
             )
@@ -495,7 +495,7 @@ def get_estimation(x, t, m, y, estimator, config):
                 interaction=False,
                 forest=False,
                 crossfit=2,
-                clip=0.0,
+                trim=0.0,
                 regularization=False,
                 calibration=False,
             )
@@ -509,7 +509,7 @@ def get_estimation(x, t, m, y, estimator, config):
                 interaction=False,
                 forest=False,
                 crossfit=0,
-                clip=0.01,
+                trim=0.01,
                 regularization=True,
                 calibration=False,
             )
@@ -523,7 +523,7 @@ def get_estimation(x, t, m, y, estimator, config):
                 interaction=False,
                 forest=False,
                 crossfit=2,
-                clip=0.01,
+                trim=0.01,
                 regularization=True,
                 calibration=False,
             )
@@ -537,7 +537,7 @@ def get_estimation(x, t, m, y, estimator, config):
                 interaction=False,
                 forest=False,
                 crossfit=0,
-                clip=0.01,
+                trim=0.01,
                 regularization=True,
                 calibration=True,
             )
@@ -551,7 +551,7 @@ def get_estimation(x, t, m, y, estimator, config):
                 interaction=False,
                 forest=False,
                 crossfit=0,
-                clip=0.01,
+                trim=0.01,
                 regularization=True,
                 calibration=True,
                 calib_method="isotonic",
@@ -566,7 +566,7 @@ def get_estimation(x, t, m, y, estimator, config):
                 interaction=False,
                 forest=False,
                 crossfit=2,
-                clip=0.01,
+                trim=0.01,
                 regularization=True,
                 calibration=True,
             )
@@ -580,7 +580,7 @@ def get_estimation(x, t, m, y, estimator, config):
                 interaction=False,
                 forest=False,
                 crossfit=2,
-                clip=0.01,
+                trim=0.01,
                 regularization=True,
                 calibration=True,
                 calib_method="isotonic",
@@ -595,7 +595,7 @@ def get_estimation(x, t, m, y, estimator, config):
                 interaction=False,
                 forest=True,
                 crossfit=0,
-                clip=0.01,
+                trim=0.01,
                 regularization=True,
                 calibration=False,
             )
@@ -609,7 +609,7 @@ def get_estimation(x, t, m, y, estimator, config):
                 interaction=False,
                 forest=True,
                 crossfit=2,
-                clip=0.01,
+                trim=0.01,
                 regularization=True,
                 calibration=False,
             )
@@ -623,7 +623,7 @@ def get_estimation(x, t, m, y, estimator, config):
                 interaction=False,
                 forest=True,
                 crossfit=0,
-                clip=0.01,
+                trim=0.01,
                 regularization=True,
                 calibration=True,
             )
@@ -637,7 +637,7 @@ def get_estimation(x, t, m, y, estimator, config):
                 interaction=False,
                 forest=True,
                 crossfit=0,
-                clip=0.01,
+                trim=0.01,
                 regularization=True,
                 calibration=True,
                 calib_method="isotonic",
@@ -652,7 +652,7 @@ def get_estimation(x, t, m, y, estimator, config):
                 interaction=False,
                 forest=True,
                 crossfit=2,
-                clip=0.01,
+                trim=0.01,
                 regularization=True,
                 calibration=True,
             )
@@ -666,7 +666,7 @@ def get_estimation(x, t, m, y, estimator, config):
                 interaction=False,
                 forest=True,
                 crossfit=2,
-                clip=0.01,
+                trim=0.01,
                 regularization=True,
                 calibration=True,
                 calib_method="isotonic",
@@ -678,15 +678,151 @@ def get_estimation(x, t, m, y, estimator, config):
         if config > 0:
             effects = medDML(y, t, m, x, trim=0.0, order=1)
     elif estimator == "med_dml_noreg":
-        effects = med_dml(x, t, m, y, trim=0, regularization=False)
+        effects = med_dml(
+            x,
+            t,
+            m,
+            y,
+            forest=False,
+            crossfit=0,
+            trim=0,
+            regularization=False,
+            calibration=False,
+        )
     elif estimator == "med_dml_reg":
-        effects = med_dml(x, t, m, y, trim=0)
+        effects = med_dml(
+            x,
+            t,
+            m,
+            y,
+            forest=False,
+            crossfit=0,
+            trim=0,
+            regularization=True,
+            calibration=False,
+        )
     elif estimator == "med_dml_reg_fixed_seed":
-        effects = med_dml(x, t, m, y, trim=0, random_state=321)
+        effects = med_dml(
+            x,
+            t,
+            m,
+            y,
+            forest=False,
+            crossfit=0,
+            trim=0,
+            regularization=True,
+            calibration=False,
+            random_state=321,
+        )
+    elif estimator == "med_dml_reg_not_normalized":
+        effects = med_dml(
+            x,
+            t,
+            m,
+            y,
+            forest=False,
+            crossfit=0,
+            trim=0,
+            normalized=False,
+            regularization=True,
+            calibration=False,
+        )
+    elif estimator == "med_dml_reg_calibration":
+        effects = med_dml(
+            x,
+            t,
+            m,
+            y,
+            forest=False,
+            crossfit=0,
+            trim=0,
+            regularization=True,
+            calibration=True,
+        )
+    elif estimator == "med_dml_reg_forest":
+        effects = med_dml(
+            x,
+            t,
+            m,
+            y,
+            forest=True,
+            crossfit=0,
+            trim=0,
+            regularization=True,
+            calibration=False,
+        )
+    elif estimator == "med_dml_reg_forest_calibration":
+        effects = med_dml(
+            x,
+            t,
+            m,
+            y,
+            forest=True,
+            crossfit=0,
+            trim=0,
+            regularization=True,
+            calibration=True,
+        )
     elif estimator == "med_dml_noreg_cf":
-        effects = med_dml(x, t, m, y, trim=0, crossfit=4, regularization=False)
+        effects = med_dml(
+            x,
+            t,
+            m,
+            y,
+            forest=False,
+            crossfit=4,
+            trim=0,
+            regularization=False,
+            calibration=False,
+        )
     elif estimator == "med_dml_reg_cf":
-        effects = med_dml(x, t, m, y, trim=0, crossfit=4)
+        effects = med_dml(
+            x,
+            t,
+            m,
+            y,
+            forest=False,
+            crossfit=4,
+            trim=0,
+            regularization=True,
+            calibration=False,
+        )
+    elif estimator == "med_dml_reg_calibration_cf":
+        effects = med_dml(
+            x,
+            t,
+            m,
+            y,
+            forest=False,
+            crossfit=4,
+            trim=0,
+            regularization=True,
+            calibration=True,
+        )
+    elif estimator == "med_dml_reg_forest_cf":
+        effects = med_dml(
+            x,
+            t,
+            m,
+            y,
+            forest=True,
+            crossfit=4,
+            trim=0,
+            regularization=True,
+            calibration=False,
+        )
+    elif estimator == "med_dml_reg_forest_calibration_cf":
+        effects = med_dml(
+            x,
+            t,
+            m,
+            y,
+            forest=True,
+            crossfit=4,
+            trim=0,
+            regularization=True,
+            calibration=True,
+        )
     elif estimator == "G_estimator":
         if config in (0, 1, 2):
             effects = g_estimator(y, t, m, x)
