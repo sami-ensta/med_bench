@@ -10,13 +10,13 @@ sns.set_context('talk', font_scale=2.35)
 
 
 
-output_path = 'results/simulations/2023figures'
+output_path = 'C:/Users/samib/Desktop/INRIA/stage_mediation/results/simulations/2023figures'
 
 
 
 
 
-res_df = pd.read_csv('results/20230725_big_table_basic_simu.csv', sep='\t')
+res_df = pd.read_csv('C:/Users/samib/Desktop/INRIA/stage_mediation/results/20230725_big_table_basic_simu.csv', sep='\t')
 
 
 
@@ -129,6 +129,8 @@ res_df.estimator.value_counts()
 
 most_basic_estimators = ['coefficient_product','multiply_robust_noreg','DML_huber', 'med_dml_noreg']
 
+wanted_estimators = ['coefficient_product',"multiply_robust_noreg_cf",'DML_huber',"med_dml_noreg_cf",]
+
 robust_estimators = [
 "multiply_robust_forest",
 "multiply_robust_forest_calibration",
@@ -211,15 +213,24 @@ len(estnan["mediated_prop"].unique())/5400
 
 for _ in all_estimators: # Qui sont les NaN?
     print(_)
-    print(_ in list(estnan.estimator))
+    print(_ in list(estnan))
 
 
-res_df = res_df[res_df["duration"]<=10] # removing observations with aberant computation time
+# Multiply_noreg_cf gave aberrant results, to investigate
+res_df[res_df.duration>100].estimator
+res_df[res_df.indirect_effect_error>100]
+res_df[res_df.indirect_effect_error<-100].index
+
+res_df=res_df.drop(res_df[res_df.indirect_effect_error>100].index)
+res_df=res_df.drop(res_df[res_df.indirect_effect_error<-100].index)
+
+from matplotlib.colors import LinearSegmentedColormap
+my_cmap2 = LinearSegmentedColormap.from_list("", ['blue', 'orange','red',"green"])
+plt.cm.register_cmap("mycolormap", my_cmap2)
+cpal = sns.color_palette("mycolormap", n_colors=10, desat=1)
 
 
-
-
-plotted_estimators = dml_estimators
+plotted_estimators = robust_estimators
 
 for conf in all_configs:
     for effect in ['direct', 'indirect', 'total']:
@@ -228,7 +239,7 @@ for conf in all_configs:
                 data=res_df[(res_df.med_setting==conf)&(res_df.estimator.isin(plotted_estimators))],
                 aspect=1.3, height=7,
                 kind='point', sharey='row', margin_titles=True, dodge=0.6,
-                capsize=0, join=False, col_order=setting_order, scale=2, errwidth=7, palette="cubehelix")
+                capsize=0, join=False, col_order=setting_order, scale=2, errwidth=7,palette=sns.color_palette('viridis_r', n_colors = 10))
         for i in range(g.axes.shape[0]):
             for j in range(g.axes.shape[1]):
                 true_val = 0
@@ -256,14 +267,21 @@ for conf in all_configs:
 
 
 
+
+
+
+
+
+plotted_estimators = wanted_estimators
+
 for conf in all_configs:
     for effect in ['duration']:
         g = sns.catplot(x="n", y="{}".format(effect), hue="nice_estimator",
                 col="setting_name", row='configuration',
-                data=res_df[(res_df.med_setting==conf)&(res_df.estimator.isin(plotted_estimators))],
+                data=res_df[(res_df.med_setting==conf)&(res_df.estimator.isin(plotted_estimators))&(res_df.n==1000)],
                 aspect=1.3, height=7,
                 kind='point', sharey='row', margin_titles=True, dodge=0.6,
-                capsize=0, join=False, col_order=setting_order, scale=2, errwidth=7, palette="cubehelix")
+                capsize=0, join=False, col_order=setting_order, scale=2, errwidth=7, palette=['blue', 'orange','red',"green"])
         for i in range(g.axes.shape[0]):
             for j in range(g.axes.shape[1]):
                 true_val = 0
@@ -272,7 +290,7 @@ for conf in all_configs:
         for ax in g.axes.ravel():
             ax.set_xlabel(ax.get_xlabel().replace('n', 'number of units'))
             ax.set_ylabel(ax.get_ylabel().replace("{}".format(effect), 
-                                                 'computation time (s)'.format(effect)))
+                                                 '{} (s)'.format(effect)))
 
         plt.subplots_adjust(hspace=0.1, wspace=0.1)
         g = g.set_titles(row_template='{row_name}', col_template='{col_name}', weight='bold')
@@ -285,5 +303,90 @@ for conf in all_configs:
         g._legend.set_in_layout(in_layout=True)
 
 
-        plt.savefig('{}/{}_{}.pdf'.format(output_path, conf, effect),
+        plt.savefig('{}/{}_{}_effect.pdf'.format(output_path, conf, effect),
                     bbox_extra_artists=(g._legend, g.fig), bbox_inches='tight')
+
+
+
+
+
+
+
+
+
+
+plotted_estimators = dml_estimators
+
+for conf in all_configs:
+    for effect in ['duration']:
+        g = sns.catplot(x="n", y="{}".format(effect), hue="nice_estimator",
+                col="setting_name", row='configuration',
+                data=res_df[(res_df.med_setting==conf)&(res_df.estimator.isin(plotted_estimators))&(res_df.n==1000)],
+                aspect=1.3, height=7,
+                kind='point', sharey='row', margin_titles=True, dodge=0.6,
+                capsize=0, join=False, col_order=setting_order, scale=2, errwidth=7, palette=sns.color_palette('flare', n_colors = 12))
+        for i in range(g.axes.shape[0]):
+            for j in range(g.axes.shape[1]):
+                true_val = 0
+                g.axes[i, j].axhline(y=true_val, color="black", lw=4)
+        [plt.setp(ax.texts, text="") for ax in g.axes.flat]
+        for ax in g.axes.ravel():
+            ax.set_xlabel(ax.get_xlabel().replace('n', 'number of units'))
+            ax.set_ylabel(ax.get_ylabel().replace("{}".format(effect), 
+                                                 '{} (s)'.format(effect)))
+
+        plt.subplots_adjust(hspace=0.1, wspace=0.1)
+        g = g.set_titles(row_template='{row_name}', col_template='{col_name}', weight='bold')
+        hh = plt.setp(g._legend.get_texts(), fontsize=55)
+        sns.move_legend(g, "lower left", bbox_to_anchor=(0.02, -0.1), ncol=3,
+                        frameon=True, title="Estimator",
+                        title_fontproperties={'weight':'bold'},
+                        bbox_transform=g.fig.transFigure)
+
+        g._legend.set_in_layout(in_layout=True)
+
+
+        plt.savefig('{}/{}_{}_effect.pdf'.format(output_path, conf, effect),
+                    bbox_extra_artists=(g._legend, g.fig), bbox_inches='tight')
+
+
+
+
+
+plotted_estimators = robust_estimators
+
+for conf in all_configs:
+    for effect in ['duration']:
+        g = sns.catplot(x="n", y="{}".format(effect), hue="nice_estimator",
+                col="setting_name", row='configuration',
+                data=res_df[(res_df.med_setting==conf)&(res_df.estimator.isin(plotted_estimators))&(res_df.n==1000)],
+                aspect=1.3, height=7,
+                kind='point', sharey='row', margin_titles=True, dodge=0.6,
+                capsize=0, join=False, col_order=setting_order, scale=2, errwidth=7, palette=sns.color_palette('viridis_r', n_colors = 10))
+        for i in range(g.axes.shape[0]):
+            for j in range(g.axes.shape[1]):
+                true_val = 0
+                g.axes[i, j].axhline(y=true_val, color="black", lw=4)
+        [plt.setp(ax.texts, text="") for ax in g.axes.flat]
+        for ax in g.axes.ravel():
+            ax.set_xlabel(ax.get_xlabel().replace('n', 'number of units'))
+            ax.set_ylabel(ax.get_ylabel().replace("{}".format(effect), 
+                                                 '{} (s)'.format(effect)))
+
+        plt.subplots_adjust(hspace=0.1, wspace=0.1)
+        g = g.set_titles(row_template='{row_name}', col_template='{col_name}', weight='bold')
+        hh = plt.setp(g._legend.get_texts(), fontsize=55)
+        sns.move_legend(g, "lower left", bbox_to_anchor=(0.02, -0.1), ncol=3,
+                        frameon=True, title="Estimator",
+                        title_fontproperties={'weight':'bold'},
+                        bbox_transform=g.fig.transFigure)
+
+        g._legend.set_in_layout(in_layout=True)
+
+
+        plt.savefig('{}/{}_{}_effect.pdf'.format(output_path, conf, effect),
+                    bbox_extra_artists=(g._legend, g.fig), bbox_inches='tight')
+
+# lifesaver:
+# https://r02b.github.io/seaborn_palettes/
+# https://www.python-simple.com/python-seaborn/seaborn-colors.php
